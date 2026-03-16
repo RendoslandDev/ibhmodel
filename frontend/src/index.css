@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: #0D0D0D;
+    color: #E8E0D0;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+
+  ::-webkit-scrollbar-track { background: #0D0D0D; }
+
+  ::-webkit-scrollbar-thumb { background: #C8963E44; border-radius: 2px; }
+  
+  ::-webkit-scrollbar-thumb:hover { background: #C8963E; }
+}
+
+@layer components {
+  .ibh-input {
+    @apply w-full bg-ibh-dark-4 border border-white/[0.07] border-b-gold/30
+           text-ibh-cream font-montserrat text-sm font-light px-4 py-3.5
+           outline-none transition-all duration-300 placeholder:text-white/20
+           placeholder:italic focus:border-gold focus:bg-gold/[0.04];
+  }
+
+  .ibh-label {
+    @apply text-[9px] font-medium tracking-[0.35em] text-ibh-muted uppercase;
+  }
+
+  .ibh-section-tag {
+    @apply text-[10px] font-medium tracking-[0.4em] text-gold uppercase;
+  }
+
+  .ibh-btn-primary {
+    @apply inline-flex items-center gap-4 bg-gold text-ibh-dark
+           font-montserrat text-[11px] font-semibold tracking-[0.3em] uppercase
+           px-10 py-5 cursor-pointer transition-all duration-300
+           hover:shadow-[0_8px_40px_rgba(200,150,62,0.35)] hover:brightness-110
+           active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .ibh-btn-outline {
+    @apply inline-flex items-center gap-3 border border-gold text-gold
+           font-montserrat text-[11px] font-medium tracking-[0.3em] uppercase
+           px-8 py-4 cursor-pointer relative overflow-hidden
+           transition-colors duration-300 hover:text-ibh-dark;
+  }
+
+  .ibh-btn-outline::before {
+    content: '';
+    @apply absolute inset-0 bg-gold scale-x-0 origin-left transition-transform duration-300;
+  }
+
+  .ibh-btn-outline:hover::before { @apply scale-x-100; }
+
+  .ibh-btn-outline span { @apply relative z-10; }
+
+  .ibh-card {
+    @apply bg-ibh-dark-3 border border-white/[0.06] p-6;
+  }
+
+  .ibh-divider {
+    @apply h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent;
+  }
+
+  .ibh-corner-box {
+    @apply relative before:absolute before:top-0 before:left-0 before:w-8 before:h-8
+           before:border-t before:border-l before:border-gold/40
+           after:absolute after:bottom-0 after:right-0 after:w-8 after:h-8
+           after:border-b after:border-r after:border-gold/40;
+  }
+}
