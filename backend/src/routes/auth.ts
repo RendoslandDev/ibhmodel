@@ -5,7 +5,6 @@ import { queryOne } from '../db/pool';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { adminLoginSchema } from '../middleware/validate';
 import { Admin } from '../types';
-
 export const authRouter = Router();
 
 // ── POST /auth/login ──────────────────────────────────────────────────────────
@@ -34,10 +33,10 @@ authRouter.post('/login', async (req: Request, res: Response): Promise<void> => 
     }
 
     const token = jwt.sign(
-      { adminId: admin.id, email: admin.email, role: admin.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
+  { adminId: admin.id, email: admin.email, role: admin.role },
+  process.env.JWT_SECRET as string,
+  { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as jwt.SignOptions['expiresIn'] }
+);
 
     res.json({
       token,
