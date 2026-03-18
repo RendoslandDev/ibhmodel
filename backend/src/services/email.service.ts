@@ -1,10 +1,10 @@
 import nodemailer from 'nodemailer';
 import { Application } from '../types';
 
+
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
+  service: 'gmail', // Use the built-in Gmail service shortcut
+  pool: true,       // Enable pooling to keep connections alive
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
