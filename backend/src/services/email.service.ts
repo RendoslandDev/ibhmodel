@@ -3,8 +3,8 @@ import { Application } from '../types';
 
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // Use the built-in Gmail service shortcut
-  pool: true,       // Enable pooling to keep connections alive
+  service: 'gmail', 
+  pool:true,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -148,27 +148,27 @@ export async function sendStatusUpdateEmail(
 ): Promise<void> {
   const messages: Record<string, { subject: string; body: string }> = {
     approved: {
-      subject: `IBH Company — Great News, ${app.first_name}!`,
+      subject: `IBH  — Great News, ${app.first_name}!`,
       body: `<div class="tag">Application Approved</div>
         <h2>You have been approved!</h2>
         <p>We are delighted to inform you that your application to IBH Company has been <span class="highlight">approved</span>. Welcome to the IBH family.</p>
         <p>Your Upfront Agreement will be sent to you shortly. Please look out for a separate email with the agreement attached.</p>`,
     },
     rejected: {
-      subject: `IBH Company — Application Update`,
+      subject: `IBH  — Application Update`,
       body: `<div class="tag">Application Update</div>
         <h2>Thank you for applying.</h2>
         <p>Thank you for your interest in IBH Company. After careful review, we are unable to move forward with your application at this time.</p>
         <p>We encourage you to reapply in the future as our roster needs evolve. We wish you the very best in your modeling career.</p>`,
     },
     reviewing: {
-      subject: `IBH Company — Your Application is Under Review`,
+      subject: `IBH — Your Application is Under Review`,
       body: `<div class="tag">Under Review</div>
         <h2>We are reviewing your application.</h2>
         <p>Your application is currently being actively reviewed by our team. We will be in touch shortly with a decision.</p>`,
     },
     waitlisted: {
-      subject: `IBH Company — Application Update`,
+      subject: `IBH  — Application Update`,
       body: `<div class="tag">Waitlisted</div>
         <h2>You have been added to our waitlist.</h2>
         <p>Your profile is impressive and we have added you to our priority waitlist. We will reach out as soon as a position becomes available.</p>`,
