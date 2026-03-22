@@ -1,16 +1,9 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { Application } from '../types';
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail', 
-  pool:true,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
-
+// ── Base Email Template ──────────────────────────────────────────────────────
 const baseTemplate = (content: string) => `
 <!DOCTYPE html>
 <html>
@@ -55,7 +48,7 @@ const baseTemplate = (content: string) => `
 </body>
 </html>`;
 
-// ── Email to model on successful submission ──────────────────────────────────
+// ── Application Confirmation Email ───────────────────────────────────────────
 export async function sendApplicationConfirmation(app: Application): Promise<void> {
   const html = baseTemplate(`
     <div class="tag">Application Received</div>
@@ -63,7 +56,7 @@ export async function sendApplicationConfirmation(app: Application): Promise<voi
     <p>Your application to join IBH Company's talent roster has been received and is now under review. We take care to evaluate every submission personally.</p>
     <div class="divider"></div>
     <p><strong style="color:#FAF7F2;">What happens next?</strong></p>
-    <p>Our team will review your application within <span class="highlight">5–7 business days</span>. If your profile is a match, you will receive a follow-up email with next steps, including the IBH Model Upfront Agreement to review and sign.</p>
+    <p>Our team will review your application within <span class="highlight">5–7 business days</span>. If your profile is a match, you will receive a follow-up email with next steps.</p>
     <div class="divider"></div>
     <div class="info-row"><span class="info-label">Name</span><span class="info-val">${app.first_name} ${app.last_name}</span></div>
     <div class="info-row"><span class="info-label">Email</span><span class="info-val">${app.email}</span></div>
@@ -73,15 +66,15 @@ export async function sendApplicationConfirmation(app: Application): Promise<voi
     <p style="font-size:12px;">For enquiries, reply to this email or contact us at <span class="highlight">${process.env.ADMIN_EMAIL}</span></p>
   `);
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM!,
     to: app.email,
     subject: `IBH Company — Application Received, ${app.first_name}`,
     html,
   });
 }
 
-// ── Email to admin on new submission ────────────────────────────────────────
+// ── Admin Notification Email ─────────────────────────────────────────────────
 export async function sendAdminNotification(app: Application): Promise<void> {
   const html = baseTemplate(`
     <div class="tag">New Application</div>
@@ -99,15 +92,15 @@ export async function sendAdminNotification(app: Application): Promise<void> {
     <a href="${process.env.FRONTEND_URL}/admin/applications/${app.id}" class="btn">Review Application</a>
   `);
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
-    to: process.env.ADMIN_EMAIL,
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM!,
+    to: process.env.ADMIN_EMAIL!,
     subject: `[IBH] New Application — ${app.first_name} ${app.last_name}`,
     html,
   });
 }
 
-// ── Email agreement PDF to model ─────────────────────────────────────────────
+// ── Agreement Email with PDF Attachment ──────────────────────────────────────
 export async function sendAgreementEmail(
   app: Application,
   pdfBuffer: Buffer
@@ -115,32 +108,29 @@ export async function sendAgreementEmail(
   const html = baseTemplate(`
     <div class="tag">Action Required</div>
     <h2>Your IBH Model Upfront Agreement</h2>
-    <p>Congratulations, ${app.first_name}! We are pleased to move forward with your application. Please find your IBH Model Upfront Agreement attached to this email.</p>
+    <p>Congratulations, ${app.first_name}! Please find your agreement attached.</p>
     <div class="divider"></div>
     <p><strong style="color:#FAF7F2;">Next Steps</strong></p>
-    <p>1. Read the attached Upfront Agreement carefully.<br/>
-       2. Sign and return a scanned copy to <span class="highlight">${process.env.ADMIN_EMAIL}</span>.<br/>
-       3. Once received, our team will contact you to schedule your first consultation.</p>
-    <div class="divider"></div>
-    <p style="font-size:11px;color:#555;">This agreement does not constitute a formal employment offer. Please review all terms before signing. Contact us if you have any questions.</p>
+    <p>1. Read the agreement carefully.<br/>
+       2. Sign and return it to <span class="highlight">${process.env.ADMIN_EMAIL}</span>.<br/>
+       3. Await further instructions from our team.</p>
   `);
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM!,
     to: app.email,
     subject: `IBH Company — Your Model Upfront Agreement`,
     html,
     attachments: [
       {
         filename: `IBH_Upfront_Agreement_${app.first_name}_${app.last_name}.pdf`,
-        content: pdfBuffer,
-        contentType: 'application/pdf',
+        content: pdfBuffer.toString('base64'),
       },
     ],
   });
 }
 
-// ── Status update email ──────────────────────────────────────────────────────
+// ── Status Update Email ──────────────────────────────────────────────────────
 export async function sendStatusUpdateEmail(
   app: Application,
   status: string,
@@ -148,30 +138,26 @@ export async function sendStatusUpdateEmail(
 ): Promise<void> {
   const messages: Record<string, { subject: string; body: string }> = {
     approved: {
-      subject: `IBH  — Great News, ${app.first_name}!`,
+      subject: `IBH — Great News, ${app.first_name}!`,
       body: `<div class="tag">Application Approved</div>
         <h2>You have been approved!</h2>
-        <p>We are delighted to inform you that your application to IBH Company has been <span class="highlight">approved</span>. Welcome to the IBH family.</p>
-        <p>Your Upfront Agreement will be sent to you shortly. Please look out for a separate email with the agreement attached.</p>`,
+        <p>Your application has been <span class="highlight">approved</span>.</p>`,
     },
     rejected: {
-      subject: `IBH  — Application Update`,
+      subject: `IBH — Application Update`,
       body: `<div class="tag">Application Update</div>
         <h2>Thank you for applying.</h2>
-        <p>Thank you for your interest in IBH Company. After careful review, we are unable to move forward with your application at this time.</p>
-        <p>We encourage you to reapply in the future as our roster needs evolve. We wish you the very best in your modeling career.</p>`,
+        <p>We are unable to move forward at this time.</p>`,
     },
     reviewing: {
-      subject: `IBH — Your Application is Under Review`,
+      subject: `IBH — Under Review`,
       body: `<div class="tag">Under Review</div>
-        <h2>We are reviewing your application.</h2>
-        <p>Your application is currently being actively reviewed by our team. We will be in touch shortly with a decision.</p>`,
+        <h2>Your application is being reviewed.</h2>`,
     },
     waitlisted: {
-      subject: `IBH  — Application Update`,
+      subject: `IBH — Waitlisted`,
       body: `<div class="tag">Waitlisted</div>
-        <h2>You have been added to our waitlist.</h2>
-        <p>Your profile is impressive and we have added you to our priority waitlist. We will reach out as soon as a position becomes available.</p>`,
+        <h2>You have been waitlisted.</h2>`,
     },
   };
 
@@ -184,8 +170,8 @@ export async function sendStatusUpdateEmail(
 
   const html = baseTemplate(`${msg.body}${notesBlock}`);
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM!,
     to: app.email,
     subject: msg.subject,
     html,
